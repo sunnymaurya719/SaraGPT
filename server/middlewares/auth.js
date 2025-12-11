@@ -16,7 +16,7 @@ export const protect = async(req,res,next) =>{
         next();
     }
     catch(error){
-        return res.json({success:false,message:error.message});
+        return res.json({success:false,message:"Error At auth.js"+error.message});
     }
 
     

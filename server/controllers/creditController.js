@@ -88,6 +88,6 @@ export const purchasePlan = async (req, res) => {
         res.json({ success: true, url: session.url });
 
     } catch (error) {
-        res.json({ success: false, message: error.message })
+        res.json({ success: false, message:"Error at creditController.js" + error.message })
     }
 }
