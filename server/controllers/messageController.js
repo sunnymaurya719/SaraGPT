@@ -1,4 +1,4 @@
-import openai from '../configs/openai.js';
+import ai from '../configs/perplexityai.js';
 import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 import axios from 'axios';
@@ -9,11 +9,13 @@ import imagekit from '../configs/imagekit.js';
 export const textMessageController = async (req, res) => {
     try {
         const userId = req.user._id;
-        
+
         if (req.user.credits < 1) {
             return res.json({ success: false, message: "Not enough credits" });
         }
         const { chatId, prompt } = req.body;
+
+        console.log("Prompt:", prompt);
 
         const chat = await Chat.findOne({ userId, _id: chatId });
         chat.messages.push({
@@ -23,24 +25,31 @@ export const textMessageController = async (req, res) => {
             timestamp: Date.now()
         });
 
-        const { choices } = await openai.chat.completions.create({
-            model: 'gemini-2.0-flash',
+
+        const completion = await ai.chat.completions.create({
+            model: "sonar-pro",
             messages: [
                 {
                     role: 'user',
-                    content: prompt,
+                    content: prompt
                 }
-            ]
-        });
+            ],
+        })
 
-        const reply = { ...choices[0].message, timestamp: Date.now(), isImage: false }
+        console.log(completion.choices[0].message.content);
+
+        const Airesponse = completion.choices[0].message.content;
+
+
+
+        const reply = {role:'Assistant',content:Airesponse, timestamp: Date.now(), isImage: false }
         res.json({ success: true, reply });
         chat.messages.push(reply);
         await chat.save();
         await User.updateOne({ _id: userId }, { $inc: { credits: -1 } });
 
     } catch (error) {
-        res.json({ success: false, error: error.message });
+        res.json({ success: false, error: error });
     }
 }
 
