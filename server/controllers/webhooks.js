@@ -2,11 +2,13 @@ import Stripe from "stripe";
 import Transaction from "../models/Transaction.js";
 import User from "../models/User.js";
 
-export  const stripeWebhooks = async(req ,res) =>{
+export const stripeWebhooks = async(req ,res) =>{
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const sig = req.headers['stripe-signature']
+    const sig = req.headers['stripe-signature'];
 
     let event;
+
+    console.log("Webhook called");
 
     try {
         event = stripe.webhooks.constructEvent(req.body,sig,process.env.STRIPE_WEBHOOK_SECRET);

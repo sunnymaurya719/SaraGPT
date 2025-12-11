@@ -56,10 +56,12 @@ export const purchasePlan = async (req, res) => {
             credits: plan.credits,
             isPaid: false
         })
+        
+        const {origin} = req.headers;
+        console.log("Origin:", origin);
+        
 
-        const host = req.headers.host;
-        const protocol = req.headers['x-forwarded-proto'] || 'http';
-        const domain = `${protocol}://${host}`;
+        
 
         const session = await stripe.checkout.sessions.create({
 
@@ -77,8 +79,8 @@ export const purchasePlan = async (req, res) => {
             ],
 
             mode: 'payment',
-            success_url: `${domain}/loading`,
-            cancel_url: `${domain}`,
+            success_url: `${origin}/loading`,
+            cancel_url: `${origin}`,
             metadata: { transactionId: newTransaction._id.toString(), appId: 'SaraGPT' },
             expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
         });
