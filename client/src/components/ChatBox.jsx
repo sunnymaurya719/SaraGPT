@@ -2,21 +2,48 @@ import React, { use, useEffect, useRef, useState } from 'react'
 import {useAppContext} from '../context/AppContext.jsx'
 import { assets } from '../assets/assets.js';
 import Message from './Message.jsx';
+import toast from 'react-hot-toast';
 
 const ChatBox = () => {
 
   const containerRef = useRef(null);
-  const {selectedChat,theme} = useAppContext();
+  const {selectedChat,theme, user, axios, token,setUser} = useAppContext();
 
   const [messages,setMessages] = useState([]);
   const [loading,setLoading] = useState(false);
 
   const [prompt,setPrompt]  = useState('');
   const [mode,setMode] = useState('text');
-  const [isPusblished,setIsPublished] = useState(false)
+  const [isPublished,setIsPublished] = useState(false)
 
   const onSubmit =async(e)=>{ 
-    e.preventDefault();
+    try{
+      e.preventDefault();
+      if(!user) return toast('Login to send message')
+      setLoading(true);
+      const promptCopy = prompt;
+      setPrompt('');
+      setMessages(prev => [...prev,{role:'user',content:prompt,timestamp:Date.now(),isImage:false}]);
+      const res = await axios.post(`/api/message/${mode}`,{chatId:selectedChat._id,prompt,isPublished},{headers:{Authorization:token}})
+      if(res.data.success){
+        setMessages(prev => [...prev,res.data.reply])
+        //decrease credits
+        if(mode === 'image'){
+          setUser(prev => ({...prev,credits:prev.credits - 2}));
+        }else{
+          setUser(prev => ({...prev,credits:prev.credits - 1}));
+        }
+      }else{
+        toast.error(res.data.message);
+        setPrompt(promptCopy);
+      }
+    }catch(error){
+      toast.error(error.message);
+    }finally{
+      setPrompt('');
+      setLoading(false);
+    }
+    
   }
 
   useEffect(() =>{
@@ -66,7 +93,7 @@ const ChatBox = () => {
         mode ==='image' && (
           <label className='inline-flex items-center gap-2 mb-3 text-sm mx-auto'>
             <p className='text-xs'>Publish Generated Image to Community</p>
-            <input type='checkbox' className='cursor-pointer' checked={isPusblished} onChange={(e)=>setIsPublished(e.target.checked)}/>
+            <input type='checkbox' className='cursor-pointer' checked={isPublished} onChange={(e)=>setIsPublished(e.target.checked)}/>
           </label>
         )
       }

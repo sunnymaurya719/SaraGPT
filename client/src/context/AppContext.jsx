@@ -1,53 +1,104 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {dummyChats, dummyUserData} from '../assets/assets.js'
+import { dummyChats, dummyUserData } from '../assets/assets.js'
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
-const AppContext = createContext()
 
-export const AppContextProvider = ({children}) => {
+
+axios.defaults.baseURL = import.meta.env.VITE_SERVER_URL;
+
+const AppContext = createContext();
+
+export const AppContextProvider = ({ children }) => {
 
     const navigate = useNavigate();
-    const [user,setUser] = useState(null);
-    const [chats,setChats] = useState([]);
-    const [selectedChat,setSelectedChat] = useState(null);
-    const [theme,setTheme]  = useState(localStorage.getItem('theme') || 'light');
+    const [user, setUser] = useState(null);
+    const [chats, setChats] = useState([]);
+    const [selectedChat, setSelectedChat] = useState(null);
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    const [token, setToken] = useState(localStorage.getItem('token') || null);
+    const [loadingUser, setLoadingUser] = useState(true);
 
     const fetchUser = async () => {
-        setUser(dummyUserData);
+        try {
+            const res = await axios.get('/api/user/data', { headers: { Authorization: token } });
+            if (res.data.success) {
+                setUser(res.data.user);
+            } else {
+                toast.error(res.data.message);
+            }
+        } catch (error) {
+            toast.error("Something went wrong while fetching user data");
+        } finally {
+            setLoadingUser(false);
+        }
     }
 
-    const fetchUsersChats =async() => {
-        setChats(dummyChats);
-        setSelectedChat(dummyChats[0]);
+    const createNewChat = async () => {
+        try {
+            if (!user) return toast.error("Login to create a new chat");
+            navigate('/');
+            await axios.get('/api/chat/create', { headers: { Authorization: token } });
+            await fetchUsersChats();
+        }catch(error){
+            toast.error("Failed to create a new chat");
+        }
     }
 
-    useEffect(() =>{
-        if(theme === 'dark'){
+    const fetchUsersChats = async () => {
+        try{
+            const res = await axios.get('/api/chat/get',{ headers: { Authorization: token } });
+            if(res.data.success){
+                setChats(res.data.chats);
+                if(res.data.chats.length === 0){
+                    await createNewChat();
+                   // return fetchUsersChats();
+                }
+                else{
+                    setSelectedChat(res.data.chats[0]);
+                }
+            }else{
+                toast.error(res.data.message);
+            }
+        }catch(error){
+            toast.error("Failed to fetch chats"+error.message);
+        }
+    }
+
+    useEffect(() => {
+        if (theme === 'dark') {
             document.documentElement.classList.add('dark')
         }
-        else{
+        else {
             document.documentElement.classList.remove('dark');
         }
-        localStorage.setItem('theme',theme);
-    },[theme])
+        localStorage.setItem('theme', theme);
+    }, [theme])
 
-    useEffect(() =>{
-        if(user){
+    useEffect(() => {
+        if (user) {
             fetchUsersChats()
         }
-        else{
+        else {
             setChats([]);
             setSelectedChat(null);
         }
-    },[user])
+    }, [user])
 
-    useEffect(() =>{
-        fetchUser();
-    },[])
+    useEffect(() => {
+        if(token){
+            fetchUser();
+        }else{
+            setLoadingUser(false);
+            setUser(null);
+        }
+    }, [token])
 
     const value = {
-        navigate,user,setUser,fetchUser,chats,setChats,
-        selectedChat,setSelectedChat,theme,setTheme
+        navigate, user, setUser, fetchUser, chats, setChats,
+        selectedChat, setSelectedChat, theme, setTheme ,createNewChat,
+        loadingUser,fetchUsersChats,token,setToken,axios
     }
 
 

@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from 'react'
 import { dummyPublishedImages } from '../assets/assets';
-
+import {useAppContext} from '../context/AppContext.jsx'
+import toast from 'react-hot-toast';
 const Community = () => {
 
   const [images,setImages] = useState([]);
   const [loading,setLoading] = useState(true)
-
+  const {axios,token} = useAppContext();
   
 
   const fetchImages = async() =>{
-    setImages(dummyPublishedImages)
+    try{
+      const res = await axios.get('/api/user/published-images',{headers:{Authorization:token}});
+      if(res.data.success){
+        setImages(res.data.images);
+      }else{
+        toast.error(res.data.message);
+      }
+    }catch(error){
+      toast.error(error.message);
+    }
     setLoading(false);
   }
 
