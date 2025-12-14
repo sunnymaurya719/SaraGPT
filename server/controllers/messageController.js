@@ -25,15 +25,19 @@ export const textMessageController = async (req, res) => {
             timestamp: Date.now()
         });
 
+        //call perplexity with previous Msgs  (Memory)
+        const formattedMessages = chat.messages
+            .filter(msg => !msg.isImage) // skip image messages
+            .slice(-3)                  // limit memory (VERY IMPORTANT)
+            .map(msg => ({
+                role: msg.role.toLowerCase(), // 'user' | 'assistant'
+                content: msg.content
+            }));
+
 
         const completion = await ai.chat.completions.create({
             model: "sonar-pro",
-            messages: [
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
+            messages: formattedMessages
         })
 
         console.log(completion.choices[0].message.content);
@@ -42,7 +46,7 @@ export const textMessageController = async (req, res) => {
 
 
 
-        const reply = {role:'Assistant',content:Airesponse, timestamp: Date.now(), isImage: false }
+        const reply = { role: 'Assistant', content: Airesponse, timestamp: Date.now(), isImage: false }
         res.json({ success: true, reply });
         chat.messages.push(reply);
         await chat.save();
