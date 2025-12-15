@@ -36,12 +36,12 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
 
   return (
     <div className={`flex flex-col h-screen min-w-72 p-5 dark:bg-gradient-to-b from-[#242124]/30 to-[#000000]/30 border-r border-[#80609F]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1 ${!isMenuOpen && 'max-md:-translate-x-full'}`}>
-      
+
       {/*LOGO */}
       <div className="flex items-center gap-2">
-        
+
         <img src={assets.logo} alt="SaraGPT Logo" className="w-12 h-12" />
-        
+
         <div className="flex flex-col">
           <span className="text-xl font-semibold">
             SaraGPT
@@ -52,7 +52,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
         </div>
 
       </div>
-      
+
 
       {/*New Chat Button */}
       <button onClick={createNewChat} className='flex justify-center items-center w-full py-2 mt-10 text-white
@@ -86,7 +86,10 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
                     </p>
                     <p className='text-xs text-gray-500 dark:text-[#B1A6C0]'>{moment(chat.updatedAt).fromNow()}</p>
                   </div>
-                  <img onClick={e => toast.promise(deleteChat(e, chat._id), { loading: 'deleting...' })} src={assets.bin_icon} alt='' className='hidden md:group-hover:block w-4 cursor-pointer not-dark:invert' />
+                  <img onClick={e => toast.promise(deleteChat(e, chat._id), { loading: 'deleting...' })} src={assets.bin_icon} alt=''
+                    className='w-4 cursor-pointer not-dark:invert
+                    opacity-100 md:opacity-0 md:group-hover:opacity-100
+                    transition-opacity duration-200' />
                 </div>
               ))
         }
