@@ -45,8 +45,6 @@ const Message = ({ message }) => {
               ) : (
                 <div className="text-sm dark:text-primary reset-tw">
                   <Markdown
-                    remarkPlugins={[remarkGfm]}
-                    components={MarkdownComponents}
                   >
                     {fixMarkdown(message.content)}
                   </Markdown>
