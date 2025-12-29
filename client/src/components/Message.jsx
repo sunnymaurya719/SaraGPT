@@ -3,9 +3,19 @@ import { assets } from '../assets/assets'
 import moment from 'moment'
 import Markdown from 'react-markdown';
 import Prism from 'prismjs'
+import remarkGfm from 'remark-gfm';
+import "prismjs/themes/prism-tomorrow.css";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-python";
 
 const Message = ({ message }) => {
-  
+  const normalizeMarkdown = (text = "") => {
+    return text
+      .replace(/\r\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n");
+  };
+
   return (
     <div>
       {
@@ -23,32 +33,38 @@ const Message = ({ message }) => {
               message.isImage ? (
                 <img src={message.content} alt='' className='w-full max-w-md mt-2 rounded-md' />
               ) : (
-                <div className='text-sm dark:text-primary reset-tw'>
+                <div className="text-sm dark:text-primary reset-tw">
                   <Markdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       code({ inline, className, children }) {
-                        const match = /language-(\w+)/.exec(className || "");
-                        return !inline && match ? (
-                          <pre className={`language-${match[1]}`}>
-                            <code
-                              dangerouslySetInnerHTML={{
-                                __html: Prism.highlight(
-                                  String(children),
-                                  Prism.languages[match[1]],
-                                  match[1]
-                                ),
-                              }}
-                            />
-                          </pre>
-                        ) : (
-                          <code className="bg-black/20 px-1 rounded">
+                        const language = className?.replace("language-", "");
+
+                        if (!inline && language && Prism.languages[language]) {
+                          return (
+                            <pre className={`language-${language}`}>
+                              <code
+                                dangerouslySetInnerHTML={{
+                                  __html: Prism.highlight(
+                                    String(children).replace(/\n$/, ""),
+                                    Prism.languages[language],
+                                    language
+                                  ),
+                                }}
+                              />
+                            </pre>
+                          );
+                        }
+
+                        return (
+                          <code className="bg-black/20 px-1 py-0.5 rounded">
                             {children}
                           </code>
                         );
                       },
                     }}
                   >
-                    {message.content}
+                    {normalizeMarkdown(message.content)}
                   </Markdown>
                 </div>
 
