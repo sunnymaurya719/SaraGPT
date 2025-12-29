@@ -34,17 +34,19 @@ export const textMessageController = async (req, res) => {
                 content: msg.content
             }));
 
+        function removeCitations(text) {
+            // removes [3], [10], [3][4][9], etc.
+            return text.replace(/\[\d+\]/g, "");
+        }
+
 
         const completion = await ai.chat.completions.create({
             model: "sonar-pro",
+            max_tokens:512,
             messages: formattedMessages
         })
 
-        console.log(completion.choices[0].message.content);
-
-        const Airesponse = completion.choices[0].message.content;
-
-
+        const Airesponse = removeCitations(completion.choices[0].message.content).replace(/\s+/g, " ").trim();
 
         const reply = { role: 'Assistant', content: Airesponse, timestamp: Date.now(), isImage: false }
         res.json({ success: true, reply });
