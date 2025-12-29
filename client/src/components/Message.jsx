@@ -10,11 +10,21 @@ import "prismjs/components/prism-css";
 import "prismjs/components/prism-python";
 
 const Message = ({ message }) => {
-  const normalizeMarkdown = (text = "") => {
+  const fixMarkdown = (text = "") => {
     return text
-      .replace(/\r\n/g, "\n")
+      // fix headings
+      .replace(/###\s*(.*?)(?=\s[A-Z]|$)/g, "### $1\n\n")
+
+      // fix "javascript code" blocks
+      .replace(
+        /javascript\s+([\s\S]*?)(?=\n[A-Z]|$)/g,
+        "```javascript\n$1\n```"
+      )
+
+      // normalize spacing
       .replace(/\n{3,}/g, "\n\n");
   };
+
 
   return (
     <div>
@@ -36,35 +46,9 @@ const Message = ({ message }) => {
                 <div className="text-sm dark:text-primary reset-tw">
                   <Markdown
                     remarkPlugins={[remarkGfm]}
-                    components={{
-                      code({ inline, className, children }) {
-                        const language = className?.replace("language-", "");
-
-                        if (!inline && language && Prism.languages[language]) {
-                          return (
-                            <pre className={`language-${language}`}>
-                              <code
-                                dangerouslySetInnerHTML={{
-                                  __html: Prism.highlight(
-                                    String(children).replace(/\n$/, ""),
-                                    Prism.languages[language],
-                                    language
-                                  ),
-                                }}
-                              />
-                            </pre>
-                          );
-                        }
-
-                        return (
-                          <code className="bg-black/20 px-1 py-0.5 rounded">
-                            {children}
-                          </code>
-                        );
-                      },
-                    }}
+                    components={MarkdownComponents}
                   >
-                    {normalizeMarkdown(message.content)}
+                    {fixMarkdown(message.content)}
                   </Markdown>
                 </div>
 
